@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
 import { format, addDays, subDays } from 'date-fns';
 import { uk } from 'date-fns/locale';
-import { supabase } from '../lib/supabase';
+import {
+  fetchEntriesForAdminPage,
+  insertEntry,
+  updateStatus,
+  deleteEntry,
+} from '../lib/queueApi';
+import { validateTelegramTag, validateRoom } from '../lib/validation';
 import './AdminPage.css';
 
 const FLOORS = [4, 6];
@@ -9,6 +15,7 @@ const STATUS_OPTIONS = [
   { value: 'waiting', label: 'Очікую' },
   { value: 'in_progress', label: 'В процесі' },
   { value: 'finished', label: 'Закінчив' },
+  { value: 'skipped', label: 'Забив Хуй' },
 ];
 
 export default function AdminPage() {
@@ -22,6 +29,7 @@ export default function AdminPage() {
     room: '',
     status: 'waiting',
   });
+  const [formError, setFormError] = useState(null);
   const [editingId, setEditingId] = useState(null);
 
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
@@ -32,12 +40,7 @@ export default function AdminPage() {
 
   async function fetchEntries() {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('queue_entries')
-      .select('*')
-      .eq('queue_date', dateStr)
-      .eq('floor', selectedFloor)
-      .order('number', { ascending: true });
+    const { data, error } = await fetchEntriesForAdminPage(dateStr, selectedFloor);
 
     if (error) {
       console.error('Помилка:', error);
@@ -50,14 +53,22 @@ export default function AdminPage() {
 
   async function handleAdd(e) {
     e.preventDefault();
-    if (!formData.telegram_tag.trim() || !formData.room.trim()) return;
+    setFormError(null);
+
+    const tagResult = validateTelegramTag(formData.telegram_tag);
+    const roomResult = validateRoom(formData.room);
+
+    if (!tagResult.valid || !roomResult.valid) {
+      setFormError(tagResult.error || roomResult.error);
+      return;
+    }
 
     const nextNumber =
       entries.length > 0 ? Math.max(...entries.map((e) => e.number)) + 1 : 1;
 
-    const { error } = await supabase.from('queue_entries').insert({
-      telegram_tag: formData.telegram_tag.trim(),
-      room: formData.room.trim(),
+    const { error } = await insertEntry({
+      telegram_tag: tagResult.value,
+      room: roomResult.value,
       status: formData.status,
       floor: selectedFloor,
       queue_date: dateStr,
@@ -68,15 +79,13 @@ export default function AdminPage() {
       alert('Помилка: ' + error.message);
     } else {
       setFormData({ telegram_tag: '', room: '', status: 'waiting' });
+      setFormError(null);
       fetchEntries();
     }
   }
 
   async function handleUpdateStatus(entry, newStatus) {
-    const { error } = await supabase
-      .from('queue_entries')
-      .update({ status: newStatus })
-      .eq('id', entry.id);
+    const { error } = await updateStatus(entry.id, newStatus);
 
     if (error) {
       alert('Помилка: ' + error.message);
@@ -89,7 +98,7 @@ export default function AdminPage() {
   async function handleDelete(id) {
     if (!confirm('Видалити запис?')) return;
 
-    const { error } = await supabase.from('queue_entries').delete().eq('id', id);
+    const { error } = await deleteEntry(id);
 
     if (error) {
       alert('Помилка: ' + error.message);
@@ -148,21 +157,22 @@ export default function AdminPage() {
         <form onSubmit={handleAdd} className="add-form">
           <input
             type="text"
-            placeholder="Телеграм тег (без @)"
+            placeholder="Телеграм тег (з @ або без)"
             value={formData.telegram_tag}
-            onChange={(e) =>
-              setFormData((f) => ({ ...f, telegram_tag: e.target.value }))
-            }
-            required
+            onChange={(e) => {
+              setFormData((f) => ({ ...f, telegram_tag: e.target.value }));
+              setFormError(null);
+            }}
           />
           <input
             type="text"
-            placeholder="Кімната"
+            inputMode="numeric"
+            placeholder="Кімната (1–1050)"
             value={formData.room}
-            onChange={(e) =>
-              setFormData((f) => ({ ...f, room: e.target.value }))
-            }
-            required
+            onChange={(e) => {
+              setFormData((f) => ({ ...f, room: e.target.value }));
+              setFormError(null);
+            }}
           />
           <select
             value={formData.status}
@@ -176,6 +186,7 @@ export default function AdminPage() {
               </option>
             ))}
           </select>
+          {formError && <p className="form-error">{formError}</p>}
           <button type="submit">Додати</button>
         </form>
       </section>

@@ -1,99 +1,152 @@
 .queue-page {
-  max-width: 800px;
+  max-width: 720px;
   margin: 0 auto;
-  padding: 1.5rem;
+  padding: 2rem 1.5rem;
+  min-height: 100vh;
 }
 
 .queue-header {
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
 }
 
 .queue-header h1 {
-  font-size: 1.75rem;
+  font-size: 2rem;
   font-weight: 700;
-  color: #1a1a2e;
+  color: #1a202c;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.calendar-section,
-.add-section,
-.floor-section,
-.table-section {
-  margin-bottom: 2rem;
+.title-icon {
+  font-size: 1.75rem;
 }
 
+/* Add date toggle (сьогодні/завтра) */
+.add-date-toggle {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.toggle-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid #e2e8f0;
+  background: var(--color-surface-solid);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: inherit;
+  color: #64748b;
+  transition: all 0.2s;
+}
+
+.toggle-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.toggle-btn.active {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* Add form */
 .add-section {
-  padding: 1rem;
-  background: #f0f9ff;
-  border-radius: 0.5rem;
-  border: 1px solid #e0f2fe;
+  margin-bottom: 1.75rem;
+  padding: 1.5rem;
+  background: var(--color-surface);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.add-section h2,
+.floor-section h2,
+.table-section h2 {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 1rem;
 }
 
 .add-form {
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .add-form input {
-  padding: 0.5rem 0.75rem;
+  padding: 0.6rem 1rem;
   border: 1px solid #e2e8f0;
-  border-radius: 0.375rem;
-  min-width: 140px;
+  background: var(--color-surface-solid);
+  border-radius: var(--radius-sm);
+  min-width: 150px;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  transition: border-color 0.2s;
+}
+
+.add-form input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+
+.add-form input::placeholder {
+  color: #a0aec0;
 }
 
 .add-form button {
-  padding: 0.5rem 1rem;
-  background: #0ea5e9;
+  padding: 0.6rem 1.25rem;
+  background: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 0.375rem;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  font-family: inherit;
+  transition: all 0.2s ease;
 }
 
 .add-form button:hover {
-  background: #0284c7;
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
 }
 
-.calendar-section h2,
-.add-section h2,
-.floor-section h2,
-.table-section h2 {
+.add-form button:active {
+  transform: translateY(0);
+}
+
+.form-error {
+  margin: 0;
+  padding: 0.5rem 0;
+  color: #dc2626;
   font-size: 0.875rem;
-  font-weight: 600;
+  width: 100%;
+}
+
+.add-disabled {
+  margin: 0;
+  padding: 0.875rem 1rem;
+  background: rgba(113, 128, 150, 0.1);
+  border-radius: var(--radius-sm);
   color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.75rem;
+  font-size: 0.9375rem;
+  border: 1px dashed rgba(113, 128, 150, 0.3);
 }
 
-.date-nav {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.nav-btn {
-  padding: 0.5rem 1rem;
-  border: 1px solid #e2e8f0;
-  background: white;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-  transition: all 0.2s;
-}
-
-.nav-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-}
-
-.current-date {
-  font-weight: 600;
-  color: #334155;
-  min-width: 180px;
-  text-align: center;
+/* Floor */
+.floor-section {
+  margin-bottom: 1.75rem;
 }
 
 .floor-buttons {
@@ -102,29 +155,63 @@
 }
 
 .floor-btn {
-  padding: 0.625rem 1.25rem;
+  padding: 0.75rem 1.5rem;
   border: 2px solid #e2e8f0;
-  background: white;
-  border-radius: 0.5rem;
+  background: var(--color-surface);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  font-family: inherit;
+  color: #4a5568;
+  transition: all 0.2s ease;
 }
 
 .floor-btn:hover {
-  border-color: #94a3b8;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .floor-btn.active {
-  background: #0ea5e9;
-  border-color: #0ea5e9;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
   color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Queue sections */
+.table-section {
+  margin-bottom: 0;
+}
+
+.queue-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.queue-day-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.queue-day-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #4a5568;
+  margin: 0;
+  padding: 0.25rem 0;
 }
 
 .table-wrapper {
   overflow-x: auto;
-  border-radius: 0.5rem;
-  border: 1px solid #e2e8f0;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  background: var(--color-surface);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
 .queue-table {
@@ -135,83 +222,134 @@
 
 .queue-table th,
 .queue-table td {
-  padding: 0.75rem 1rem;
+  padding: 1rem 1.25rem;
   text-align: left;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
 }
 
 .queue-table th {
-  background: #f8fafc;
+  background: rgba(248, 250, 252, 0.9);
   font-weight: 600;
-  color: #475569;
+  color: #4a5568;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.queue-table th:first-child,
+.queue-table td:first-child {
+  width: 4rem;
+  text-align: center;
+  font-weight: 600;
+  color: #718096;
+}
+
+.queue-table tbody tr {
+  transition: background 0.15s;
 }
 
 .queue-table tbody tr:hover {
-  background: #f8fafc;
+  background: rgba(248, 250, 252, 0.6);
 }
 
 .queue-table tbody tr.my-entry {
-  background: #f0f9ff;
+  background: var(--color-primary-soft);
 }
 
 .queue-table tbody tr.my-entry:hover {
-  background: #e0f2fe;
-}
-
-.status-select {
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.375rem;
-  border: 1px solid #cbd5e1;
-  font-size: 0.75rem;
-  cursor: pointer;
-}
-
-.status-select.status-waiting {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.status-select.status-in_progress {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.status-select.status-finished {
-  background: #d1fae5;
-  color: #065f46;
+  background: rgba(13, 148, 136, 0.15);
 }
 
 .empty-state {
   text-align: center;
-  color: #94a3b8;
-  padding: 2rem !important;
+  color: #a0aec0;
+  padding: 3rem 2rem !important;
+  font-size: 0.9375rem;
 }
 
+.loading {
+  color: #718096;
+  padding: 3rem 2rem;
+  text-align: center;
+  font-size: 0.9375rem;
+}
+
+/* Status */
 .status-badge {
   display: inline-block;
-  padding: 0.25rem 0.625rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 500;
+  padding: 0.35rem 0.75rem;
+  border-radius: 100px;
+  font-size: 0.8125rem;
+  font-weight: 600;
 }
 
 .status-waiting {
   background: #fef3c7;
-  color: #92400e;
+  color: #b45309;
 }
 
 .status-in_progress {
   background: #dbeafe;
-  color: #1e40af;
+  color: #1d4ed8;
 }
 
 .status-finished {
   background: #d1fae5;
-  color: #065f46;
+  color: #047857;
 }
 
-.loading {
-  color: #64748b;
-  padding: 2rem;
-  text-align: center;
+.status-skipped {
+  background: #f3e8ff;
+  color: #6b21a8;
+}
+
+.status-select {
+  padding: 0.35rem 0.6rem;
+  border-radius: 100px;
+  border: 2px solid transparent;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.status-select:focus {
+  outline: none;
+}
+
+.status-select.status-waiting {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.status-select.status-waiting:hover {
+  background: #fde68a;
+}
+
+.status-select.status-in_progress {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-select.status-in_progress:hover {
+  background: #bfdbfe;
+}
+
+.status-select.status-finished {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.status-select.status-finished:hover {
+  background: #a7f3d0;
+}
+
+.status-select.status-skipped {
+  background: #f3e8ff;
+  color: #6b21a8;
+}
+
+.status-select.status-skipped:hover {
+  background: #e9d5ff;
 }

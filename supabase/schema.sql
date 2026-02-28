@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS queue_entries (
   number INTEGER NOT NULL DEFAULT 1,
   telegram_tag TEXT NOT NULL,
   room TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'waiting' CHECK (status IN ('waiting', 'in_progress', 'finished')),
+  status TEXT NOT NULL DEFAULT 'waiting' CHECK (status IN ('waiting', 'in_progress', 'finished', 'skipped')),
   floor INTEGER NOT NULL CHECK (floor IN (4, 6)),
   queue_date DATE NOT NULL,
   session_id TEXT,
