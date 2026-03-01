@@ -21,7 +21,9 @@ export function validateTelegramTag(input) {
 }
 
 /**
- * Валідує номер кімнати: 1–1050.
+ * Валідує номер кімнати в гуртожитку (поверхи 2-10).
+ * Поверхи 2-9: X01-X06, X09-X24, X29-X35 (X = поверх)
+ * Поверх 10: 1001-1006, 1009-1017
  */
 export function validateRoom(input) {
   const raw = String(input ?? '').trim();
@@ -29,8 +31,28 @@ export function validateRoom(input) {
 
   if (raw === '' || isNaN(num))
     return { valid: false, value: raw, error: 'Введіть номер кімнати' };
-  if (num < 1 || num > 1050)
-    return { valid: false, value: raw, error: 'Номер кімнати: від 1 до 1050' };
+
+  // Визначаємо дійсні діапазони для всіх поверхів
+  const validRanges = [];
+
+  // Поверхи 2-9
+  for (let floor = 2; floor <= 9; floor++) {
+    const base = floor * 100;
+    validRanges.push({ min: base + 1, max: base + 6 });
+    validRanges.push({ min: base + 9, max: base + 24 });
+    validRanges.push({ min: base + 29, max: base + 35 });
+  }
+
+  // Поверх 10
+  validRanges.push({ min: 1001, max: 1006 });
+  validRanges.push({ min: 1009, max: 1017 });
+
+  // Перевіряємо, чи номер входить в один з дійсних діапазонів
+  const isValid = validRanges.some((range) => num >= range.min && num <= range.max);
+
+  if (!isValid) {
+    return { valid: false, value: raw, error: 'Потрібен дійсний номер кімнати' };
+  }
 
   return { valid: true, value: String(num), error: null };
 }

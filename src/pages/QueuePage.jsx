@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { format, addDays, subDays, isToday, isTomorrow, isBefore, startOfDay } from 'date-fns';
+import { format, addDays, subDays, isToday, isTomorrow, isBefore, startOfDay, differenceInHours } from 'date-fns';
 import {
   fetchEntriesForQueuePage,
   fetchNumbersForDate,
   insertEntry,
   updateStatusWithSession,
+  deleteEntryWithSession,
 } from '../lib/queueApi';
 import { getOrCreateSessionId } from '../lib/session';
 import { validateTelegramTag, validateRoom } from '../lib/validation';
@@ -12,10 +13,17 @@ import './QueuePage.css';
 
 const FLOORS = [4, 6];
 const STATUS_LABELS = {
-  waiting: 'Очікую',
+  waiting: 'Очікую в черзі',
   in_progress: 'В процесі',
-  finished: 'Закінчив',
-  skipped: 'Забив Хуй',
+  finished: 'Закінчено',
+  skipped: 'Забився Хуй',
+};
+
+// Тільки для користувача (без skipped)
+const USER_EDITABLE_STATUSES = {
+  waiting: 'Очікую в черзі',
+  in_progress: 'В процесі',
+  finished: 'Закінчено',
 };
 
 /** Можна записуватись тільки на сьогодні, а на завтра — лише після 22:00 */
@@ -37,7 +45,7 @@ function canSignUpForDate(date) {
   return { allowed: false, reason: 'future' };
 }
 
-function QueueDaySection({ title, entries, sessionId, onUpdateStatus }) {
+function QueueDaySection({ title, entries, sessionId, onUpdateStatus, onDeleteEntry }) {
   return (
     <div className="queue-day-section">
       <h3 className="queue-day-title">{title}</h3>
@@ -49,38 +57,56 @@ function QueueDaySection({ title, entries, sessionId, onUpdateStatus }) {
               <th>Телеграм тег</th>
               <th>Кімната</th>
               <th>Статус</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
             {entries.length === 0 ? (
               <tr>
-                <td colSpan={4} className="empty-state">
+                <td colSpan={5} className="empty-state">
                   Немає записів
                 </td>
               </tr>
             ) : (
               entries.map((entry) => {
                 const isMine = entry.session_id === sessionId;
+                const now = new Date();
+                const createdAt = new Date(entry.created_at);
+                const hoursDiff = differenceInHours(now, createdAt);
+                const isAutoSkipped = hoursDiff >= 12;
+                const displayStatus = isAutoSkipped ? 'skipped' : entry.status;
+
                 return (
                   <tr key={entry.id} className={isMine ? 'my-entry' : ''}>
                     <td>{entry.number}</td>
                     <td>@{entry.telegram_tag}</td>
                     <td>{entry.room}</td>
                     <td>
-                      {isMine ? (
+                      {isMine && !isAutoSkipped ? (
                         <select
                           value={entry.status}
                           onChange={(e) => onUpdateStatus(entry, e.target.value)}
                           className={`status-select status-${entry.status}`}
                         >
-                          {Object.entries(STATUS_LABELS).map(([val, label]) => (
+                          {Object.entries(USER_EDITABLE_STATUSES).map(([val, label]) => (
                             <option key={val} value={val}>{label}</option>
                           ))}
                         </select>
                       ) : (
-                        <span className={`status-badge status-${entry.status}`}>
-                          {STATUS_LABELS[entry.status]}
+                        <span className={`status-badge status-${displayStatus}`}>
+                          {STATUS_LABELS[displayStatus]}
                         </span>
+                      )}
+                    </td>
+                    <td>
+                      {isMine && !isAutoSkipped && (
+                        <button
+                          className="delete-btn"
+                          onClick={() => onDeleteEntry(entry.id)}
+                          title="Видалити запис"
+                        >
+                          ✕
+                        </button>
                       )}
                     </td>
                   </tr>
@@ -118,6 +144,7 @@ export default function QueuePage() {
   const [formData, setFormData] = useState({ telegram_tag: '', room: '' });
   const [formError, setFormError] = useState(null);
   const [addTargetDate, setAddTargetDate] = useState(new Date()); // сьогодні або завтра
+  const [showInfo, setShowInfo] = useState(false);
 
   const sessionId = getOrCreateSessionId();
   const now = new Date();
@@ -162,7 +189,17 @@ export default function QueuePage() {
       return;
     }
 
+    // Перевіряємо кількість записів користувача на цю дату
     const dateStr = format(targetDateForAdd, 'yyyy-MM-dd');
+    const userEntriesForDate = entriesByDate.today.filter(
+      (e) => e.session_id === sessionId && e.queue_date === dateStr
+    ).length;
+
+    if (userEntriesForDate >= 2) {
+      setFormError('Ви можете мати максимум 2 записи на день');
+      return;
+    }
+
     const { data: numbersData } = await fetchNumbersForDate(dateStr, selectedFloor);
     const relevantEntries = numbersData || [];
     const nextNumber = relevantEntries.length > 0 ? Math.max(...relevantEntries.map((e) => e.number)) + 1 : 1;
@@ -196,13 +233,45 @@ export default function QueuePage() {
     }
   }
 
+  async function handleDeleteEntry(id) {
+    if (!confirm('Видалити запис?')) return;
+
+    const { error } = await deleteEntryWithSession(id, sessionId);
+
+    if (error) {
+      alert('Помилка: ' + error.message);
+    } else {
+      fetchEntries();
+    }
+  }
+
   return (
     <div className="queue-page">
       <header className="queue-header">
-        <h1>
-          <span className="title-icon">🧺</span> Черга прання
-        </h1>
+        <h1>Черга прання</h1>
+        <button
+          className="info-btn"
+          onClick={() => setShowInfo(true)}
+          title="Інформація"
+        >
+          ℹ
+        </button>
       </header>
+
+      {showInfo && (
+        <div className="modal-overlay" onClick={() => setShowInfo(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setShowInfo(false)}>✕</button>
+            <h2>Інформація про електронний запис</h2>
+            <ul>
+              <li>Редагувати статус запису може лише той, хто його створив</li>
+              <li>Один користувач не може мати більше ніж 2 записи за один день</li>
+              <li>Записи автоматично позначаються як "Забився Хуй" через 12 годин</li>
+            </ul>
+            <p className="info-footer">Пропозиції щодо покращення приймаються в телеграм <strong>@yBojk0</strong></p>
+          </div>
+        </div>
+      )}
 
       <section className="add-section">
         <h2>Додати себе в чергу</h2>
@@ -238,7 +307,7 @@ export default function QueuePage() {
             <input
               type="text"
               inputMode="numeric"
-              placeholder="Кімната (1–1050)"
+              placeholder="Кімната"
               value={formData.room}
               onChange={(e) => {
                 setFormData((f) => ({ ...f, room: e.target.value }));
@@ -286,18 +355,21 @@ export default function QueuePage() {
               entries={entriesByDate.today}
               sessionId={sessionId}
               onUpdateStatus={handleUpdateStatus}
+              onDeleteEntry={handleDeleteEntry}
             />
             <QueueDaySection
               title="Вчора"
               entries={entriesByDate.yesterday}
               sessionId={sessionId}
               onUpdateStatus={handleUpdateStatus}
+              onDeleteEntry={handleDeleteEntry}
             />
             <QueueDaySection
               title="Позавчора"
               entries={entriesByDate.dayBefore}
               sessionId={sessionId}
               onUpdateStatus={handleUpdateStatus}
+              onDeleteEntry={handleDeleteEntry}
             />
           </div>
         )}

@@ -12,10 +12,10 @@ import './AdminPage.css';
 
 const FLOORS = [4, 6];
 const STATUS_OPTIONS = [
-  { value: 'waiting', label: 'Очікую' },
+  { value: 'waiting', label: 'Очікую в черзі' },
   { value: 'in_progress', label: 'В процесі' },
-  { value: 'finished', label: 'Закінчив' },
-  { value: 'skipped', label: 'Забив Хуй' },
+  { value: 'finished', label: 'Закінчено' },
+  { value: 'skipped', label: 'Забився Хуй' },
 ];
 
 export default function AdminPage() {
@@ -167,7 +167,7 @@ export default function AdminPage() {
           <input
             type="text"
             inputMode="numeric"
-            placeholder="Кімната (1–1050)"
+            placeholder="Кімната"
             value={formData.room}
             onChange={(e) => {
               setFormData((f) => ({ ...f, room: e.target.value }));

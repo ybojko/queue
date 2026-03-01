@@ -149,7 +149,27 @@ export async function updateStatus(id, status) {
   return { error: null };
 }
 
-/** Видалити запис */
+/** Видалити запис (з перевіркою session_id — тільки свої записи) */
+export async function deleteEntryWithSession(id, sessionId) {
+  const supabase = getSupabase();
+  if (supabase != null) {
+    const { error } = await supabase
+      .from('queue_entries')
+      .delete()
+      .eq('id', id)
+      .eq('session_id', sessionId);
+    return { error };
+  }
+
+  const all = getLocalEntries();
+  const idx = all.findIndex((e) => e.id === id && e.session_id === sessionId);
+  if (idx === -1) return { error: { message: 'Запис не знайдено' } };
+  all.splice(idx, 1);
+  setLocalEntries(all);
+  return { error: null };
+}
+
+/** Видалити запис (без перевірки — адмінка) */
 export async function deleteEntry(id) {
   const supabase = getSupabase();
   if (supabase != null) {
