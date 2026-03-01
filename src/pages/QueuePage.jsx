@@ -297,7 +297,7 @@ export default function QueuePage() {
             )}
             <input
               type="text"
-              placeholder="Телеграм тег (з @ або без)"
+              placeholder="Телеграм тег"
               value={formData.telegram_tag}
               onChange={(e) => {
                 setFormData((f) => ({ ...f, telegram_tag: e.target.value }));
